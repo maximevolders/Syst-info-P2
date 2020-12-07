@@ -1,10 +1,5 @@
 #include "lib_tar.h"
 
-int count_check(tar_header_t* file){
-	int count = 0
-	return count;
-}
-
 /**
  * Checks whether the archive is valid.
  *
@@ -21,14 +16,30 @@ int count_check(tar_header_t* file){
  *         -3 if the archive contains a header with an invalid checksum value
  */
 int check_archive(int tar_fd) {
-	tar_header_t* file;
+	tar_header_t file;
+	read(tar_fd, &file, 512);
 	int nbr_headers=0;
-	while(read(tar_fd, (void*) file, 512) != 0){
-		if(file->magic != TMAGIC && strlen(file->magic) != TMAGLEN) return -1;
-		if(file->version != TVERSION && strlen(file->version) != TVERSLEN) return -2;
-		if(TAR_INT(file->chksum) != count_check(file)) return -3;
+	while(file.name[0] != '\0'){
+		
+		if((strcmp((const char*) file.magic, (const char*) TMAGIC) != 0) && (strlen(file.magic) != TMAGLEN)){
+			return -1;
+		}
+		
+		if(file.version[0] != '0' || file.version[1] != '0'){
+			return -2;
+		}
+		
+		if(TAR_INT(file.chksum) != count(&file)){
+			return -3;
+		}
+		
 		nbr_headers++;
-		read(tar_fd, NULL, TAR_INT(file->size));
+		
+		int taille = TAR_INT(file.size);
+		if(taille != 0){
+			read(tar_fd, &file, taille - taille%512 + 512);
+		}
+		read(tar_fd, &file, 512);
 	}
     return nbr_headers;
 }
@@ -43,6 +54,14 @@ int check_archive(int tar_fd) {
  *         any other value otherwise.
  */
 int exists(int tar_fd, char *path) {
+	tar_header_t file;
+	while(read(tar_fd, &file, 512) != 0){
+		if(strcmp((const char*) file.name, (const char*) path) == 0){
+		return 1;
+		}
+		
+		read(tar_fd, NULL, TAR_INT(file.size));
+	}
     return 0;
 }
 
@@ -56,6 +75,14 @@ int exists(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_dir(int tar_fd, char *path) {
+	tar_header_t file;
+	while(read(tar_fd, &file, 512) != 0){
+		if((strcmp((const char*) file.name, (const char*) path) == 0) && file.typeflag == DIRTYPE){
+			return 1;
+		}
+		
+		read(tar_fd, NULL, TAR_INT(file.size));
+	}
     return 0;
 }
 
@@ -69,6 +96,14 @@ int is_dir(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_file(int tar_fd, char *path) {
+	tar_header_t file;
+	while(read(tar_fd, &file, 512) != 0){
+		if((strcmp((const char*) file.name, (const char*) path) == 0) && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){
+			return 1;
+		}
+		
+		read(tar_fd, NULL, TAR_INT(file.size));
+	}
     return 0;
 }
 
@@ -81,6 +116,14 @@ int is_file(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int is_symlink(int tar_fd, char *path) {
+	tar_header_t file;
+	while(read(tar_fd, &file, 512) != 0){
+		if((strcmp((const char*) file.name, (const char*) path) == 0) && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){
+			return 1;
+		}
+		
+		read(tar_fd, NULL, TAR_INT(file.size));
+	}
     return 0;
 }
 
@@ -121,4 +164,32 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
  */
 ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
     return 0;
+}
+
+
+/**
+ * Fonctions supplémentaires
+ *
+ */
+
+/**
+ * Description
+ *
+ * @param file
+ *
+ * @return 
+ *
+ */
+int count(tar_header_t* file){
+	int sum = 0;
+	unsigned char* byte = (unsigned char*) file;
+	for(int i=0; i<512; i++){
+		if(i<148 || i>155){
+			sum+=byte[i];
+		}
+		else{
+			sum+=040;
+		}
+	}
+	return sum;
 }

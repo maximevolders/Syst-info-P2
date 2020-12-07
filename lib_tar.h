@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef struct posix_header
 {                              /* byte offset */
@@ -138,5 +139,21 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries);
  *
  */
 ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len);
+
+
+/**
+ * Fonctions supplémentaires
+ *
+ */
+
+/**
+ * Description
+ *
+ * @param file
+ *
+ * @return 
+ *
+ */
+int count(tar_header_t* file);
 
 #endif
