@@ -21,7 +21,7 @@ int check_archive(int tar_fd) {
 	int nbr_headers=0;
 	while(file.name[0] != '\0'){
 		
-		if((strcmp((const char*) file.magic, (const char*) TMAGIC) != 0) && (strlen(file.magic) != TMAGLEN)){
+		if((strcmp((const char*) file.magic, (const char*) TMAGIC) != 0) || (strlen(file.magic)+1 != TMAGLEN)){
 			return -1;
 		}
 		
