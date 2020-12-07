@@ -168,26 +168,26 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 
 
 /**
- * Fonctions supplémentaires
+ * Additional functions
  *
  */
 
 /**
- * Description
+ * Calculates the sum of all bytes in the header bloc.
  *
- * @param file
+ * @param file A tar header.
  *
- * @return 
+ * @return the sum of all bytes in the header bloc.
  *
  */
 int count(tar_header_t* file){
 	int sum = 0;
 	unsigned char* byte = (unsigned char*) file;
 	for(int i=0; i<512; i++){
-		if(i<148 || i>155){
+		if(i<148 || i>155){ // doesn't count the bytes in chksum[]
 			sum+=byte[i];
 		}
-		else{
+		else{ // adds the chksum[] bytes as if they were equal to " "
 			sum+=040;
 		}
 	}

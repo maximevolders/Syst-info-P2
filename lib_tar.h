@@ -142,16 +142,16 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 
 
 /**
- * Fonctions supplémentaires
+ * Additional functions
  *
  */
 
 /**
- * Description
+ * Calculates the sum of all bytes in the header bloc.
  *
- * @param file
+ * @param file A tar header.
  *
- * @return 
+ * @return the sum of all bytes in the header bloc.
  *
  */
 int count(tar_header_t* file);
