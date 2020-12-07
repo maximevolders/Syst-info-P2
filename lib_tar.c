@@ -16,16 +16,14 @@
  *         -3 if the archive contains a header with an invalid checksum value
  */
 int check_archive(int tar_fd) {
-	DIR* direct = fdopendir(tar_fd);
-	struct dirent* file = readdir(direct);
+	tar_header_t* file;
 	int nbr_headers=0;
-	while(*file != NULL){
-		//if(file->d_type != 'file') continue;
-		if(header.magic != "ustar") return -1;
-		if(header.version != "00") return -2;
-		if(header.chksum != count_check()) return -3; //PC
+	while(read(tar_fd, (void*) file, 512) != 0){
+		if(file->magic != TMAGIC && strlen(file->magic) != TMAGLEN) return -1;
+		if(file->version != TVERSION && strlen(file->version) != TVERSLEN) return -2;
+		if(file->chksum != count_check()) return -3; //PC
 		nbr_headers++;
-		file += (file->header.size); //PC
+		read(tar_fr, NULL, file->size);
 	}
     return nbr_headers;
 }
