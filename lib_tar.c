@@ -1,5 +1,10 @@
 #include "lib_tar.h"
 
+int count_check(tar_header_t* file){
+	int count = 0
+	return count;
+}
+
 /**
  * Checks whether the archive is valid.
  *
@@ -21,9 +26,9 @@ int check_archive(int tar_fd) {
 	while(read(tar_fd, (void*) file, 512) != 0){
 		if(file->magic != TMAGIC && strlen(file->magic) != TMAGLEN) return -1;
 		if(file->version != TVERSION && strlen(file->version) != TVERSLEN) return -2;
-		if(file->chksum != count_check()) return -3; //PC
+		if(TAR_INT(file->chksum) != count_check(file)) return -3;
 		nbr_headers++;
-		read(tar_fr, NULL, file->size);
+		read(tar_fd, NULL, TAR_INT(file->size));
 	}
     return nbr_headers;
 }
