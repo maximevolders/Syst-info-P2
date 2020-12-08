@@ -55,12 +55,17 @@ int check_archive(int tar_fd) {
  */
 int exists(int tar_fd, char *path) {
 	tar_header_t file;
-	while(read(tar_fd, &file, 512) != 0){
+	read(tar_fd, &file, 512);
+	while(file.name[0] != '\0'){
 		if(strcmp((const char*) file.name, (const char*) path) == 0){
 		return 1;
 		}
 		
-		read(tar_fd, NULL, TAR_INT(file.size));
+		int taille = TAR_INT(file.size);
+		if(taille != 0){
+			read(tar_fd, &file, taille - taille%512 + 512);
+		}
+		read(tar_fd, &file, 512);
 	}
     return 0;
 }
@@ -74,14 +79,20 @@ int exists(int tar_fd, char *path) {
  * @return zero if no entry at the given path exists in the archive or the entry is not a directory,
  *         any other value otherwise.
  */
+
 int is_dir(int tar_fd, char *path) {
 	tar_header_t file;
-	while(read(tar_fd, &file, 512) != 0){
-		if((strcmp((const char*) file.name, (const char*) path) == 0) && file.typeflag == DIRTYPE){
-			return 1;
+	read(tar_fd, &file, 512);
+	while(file.name[0] != '\0'){
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && file.typeflag == DIRTYPE){
+		return 1;
 		}
 		
-		read(tar_fd, NULL, TAR_INT(file.size));
+		int taille = TAR_INT(file.size);
+		if(taille != 0){
+			read(tar_fd, &file, taille - taille%512 + 512);
+		}
+		read(tar_fd, &file, 512);
 	}
     return 0;
 }
@@ -95,14 +106,20 @@ int is_dir(int tar_fd, char *path) {
  * @return zero if no entry at the given path exists in the archive or the entry is not a file,
  *         any other value otherwise.
  */
+
 int is_file(int tar_fd, char *path) {
 	tar_header_t file;
-	while(read(tar_fd, &file, 512) != 0){
-		if((strcmp((const char*) file.name, (const char*) path) == 0) && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){
-			return 1;
+	read(tar_fd, &file, 512);
+	while(file.name[0] != '\0'){
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){
+		return 1;
 		}
 		
-		read(tar_fd, NULL, TAR_INT(file.size));
+		int taille = TAR_INT(file.size);
+		if(taille != 0){
+			read(tar_fd, &file, taille - taille%512 + 512);
+		}
+		read(tar_fd, &file, 512);
 	}
     return 0;
 }
@@ -117,12 +134,17 @@ int is_file(int tar_fd, char *path) {
  */
 int is_symlink(int tar_fd, char *path) {
 	tar_header_t file;
-	while(read(tar_fd, &file, 512) != 0){
-		if((strcmp((const char*) file.name, (const char*) path) == 0) && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){
-			return 1;
+	read(tar_fd, &file, 512);
+	while(file.name[0] != '\0'){
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){
+		return 1;
 		}
 		
-		read(tar_fd, NULL, TAR_INT(file.size));
+		int taille = TAR_INT(file.size);
+		if(taille != 0){
+			read(tar_fd, &file, taille - taille%512 + 512);
+		}
+		read(tar_fd, &file, 512);
 	}
     return 0;
 }
@@ -142,6 +164,29 @@ int is_symlink(int tar_fd, char *path) {
  *         any other value otherwise.
  */
 int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
+	if(is_symlink(tar_fd, path)){
+		char newpath[100];
+		int err = readlink(path, newpath, 100);
+		if(err==-1){return 0;}
+		strcpy(path, newpath);
+	}
+	
+	if(is_directory(tar_fd, path)){
+		tar_header_t file;
+		read(tar_fd, &file, 512);
+		int i =0;
+		
+		while(file.name[0] != '\0'){
+			entries[i++]=file.name;
+			if(taille != 0){
+				read(tar_fd, &file, taille - taille%512 + 512);
+			}
+			read(tar_fd, &file, 512);
+		}
+		*no_entries=i;
+	}
+	
+	
     return 0;
 }
 

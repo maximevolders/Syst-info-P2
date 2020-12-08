@@ -35,9 +35,24 @@ int main(int argc, char **argv) {
         perror("open(tar_file)");
         return -1;
     }
-
-    int ret = check_archive(fd);
-    printf("check_archive returned %d\n", ret);
+	
+	char *path = "t1.txt";
+	
+    // int ret = check_archive(fd);
+    // printf("check_archive returned %d\n", ret);
+	
+	// int ret = exists(fd, path);
+    // printf("exists returned %d\n", ret);
+	
+	// int ret = is_dir(fd, path);
+    // printf("is_dir returned %d\n", ret);
+	
+	// int ret = is_file(fd, path);
+    // printf("is_file returned %d\n", ret);
+	
+	int ret = is_symlink(fd, path);
+    printf("is_symlink returned %d\n", ret);
+	
 
     return 0;
 }
