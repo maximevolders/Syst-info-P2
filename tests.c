@@ -36,23 +36,34 @@ int main(int argc, char **argv) {
         return -1;
     }
 	
-	char *path = "t1.txt";
+	char *path = "tet/tete/der"; //faire un test avec path < newpath (dans list)
 	
-    // int ret = check_archive(fd);
-    // printf("check_archive returned %d\n", ret);
+    int check = check_archive(fd);
+    printf("check_archive returned %d\n\n", check);
 	
-	// int ret = exists(fd, path);
-    // printf("exists returned %d\n", ret);
+	int ext = exists(fd, path);
+    printf("exists returned %d\n\n", ext);
 	
-	// int ret = is_dir(fd, path);
-    // printf("is_dir returned %d\n", ret);
+	int dir = is_dir(fd, path);
+    printf("is_dir returned %d\n\n", dir);
 	
-	// int ret = is_file(fd, path);
-    // printf("is_file returned %d\n", ret);
+	int file = is_file(fd, path);
+    printf("is_file returned %d\n\n", file);
 	
-	int ret = is_symlink(fd, path);
-    printf("is_symlink returned %d\n", ret);
+	int link = is_symlink(fd, path);
+    printf("is_symlink returned %d\n\n", link);
 	
+	char** entries = (char **) malloc(sizeof(char*)*10);
+	size_t no_entries = check;
+	for(int j=0; j<check; j++){
+		entries[j] = (char*) malloc(sizeof(char)*100);
+	}
 
+	int liste = list(fd, path, entries, &no_entries);
+	for(int i= 0; i<no_entries; i++){
+		printf("entries %d: %s\n", i, entries[i]);
+	}
+	printf("list returned %d\n\n", liste);
+	free(entries);
     return 0;
 }

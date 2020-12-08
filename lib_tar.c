@@ -41,6 +41,7 @@ int check_archive(int tar_fd) {
 		}
 		read(tar_fd, &file, 512);
 	}
+	lseek(tar_fd, 0, SEEK_SET);
     return nbr_headers;
 }
 
@@ -58,7 +59,8 @@ int exists(int tar_fd, char *path) {
 	read(tar_fd, &file, 512);
 	while(file.name[0] != '\0'){
 		if(strcmp((const char*) file.name, (const char*) path) == 0){
-		return 1;
+			lseek(tar_fd, 0, SEEK_SET);
+			return 1;
 		}
 		
 		int taille = TAR_INT(file.size);
@@ -67,6 +69,7 @@ int exists(int tar_fd, char *path) {
 		}
 		read(tar_fd, &file, 512);
 	}
+	lseek(tar_fd, 0, SEEK_SET);
     return 0;
 }
 
@@ -83,9 +86,11 @@ int exists(int tar_fd, char *path) {
 int is_dir(int tar_fd, char *path) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
+	
 	while(file.name[0] != '\0'){
 		if(strcmp((const char*) file.name, (const char*) path) == 0 && file.typeflag == DIRTYPE){
-		return 1;
+			lseek(tar_fd, 0, SEEK_SET);
+			return 1;
 		}
 		
 		int taille = TAR_INT(file.size);
@@ -94,6 +99,7 @@ int is_dir(int tar_fd, char *path) {
 		}
 		read(tar_fd, &file, 512);
 	}
+	lseek(tar_fd, 0, SEEK_SET);
     return 0;
 }
 
@@ -112,7 +118,8 @@ int is_file(int tar_fd, char *path) {
 	read(tar_fd, &file, 512);
 	while(file.name[0] != '\0'){
 		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){
-		return 1;
+			lseek(tar_fd, 0, SEEK_SET);
+			return 1;
 		}
 		
 		int taille = TAR_INT(file.size);
@@ -121,6 +128,7 @@ int is_file(int tar_fd, char *path) {
 		}
 		read(tar_fd, &file, 512);
 	}
+	lseek(tar_fd,0 ,SEEK_SET);
     return 0;
 }
 
@@ -137,7 +145,8 @@ int is_symlink(int tar_fd, char *path) {
 	read(tar_fd, &file, 512);
 	while(file.name[0] != '\0'){
 		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){
-		return 1;
+			lseek(tar_fd, 0, SEEK_SET);
+			return 1;
 		}
 		
 		int taille = TAR_INT(file.size);
@@ -146,6 +155,7 @@ int is_symlink(int tar_fd, char *path) {
 		}
 		read(tar_fd, &file, 512);
 	}
+	lseek(tar_fd,0 ,SEEK_SET);
     return 0;
 }
 
@@ -167,26 +177,42 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 	if(is_symlink(tar_fd, path)){
 		char newpath[100];
 		int err = readlink(path, newpath, 100);
-		if(err==-1){return 0;}
-		strcpy(path, newpath);
+		if(err==-1){
+			lseek(tar_fd, 0, SEEK_SET);
+			return 0;
+		}
+		printf("T2\n");
+		// strcpy(path, newpath);
+		path = newpath;
+		printf("%s\n", newpath);
+		printf("T3\n");
 	}
-	
-	if(is_directory(tar_fd, path)){
+
+	if(is_dir(tar_fd, path)){
 		tar_header_t file;
 		read(tar_fd, &file, 512);
-		int i =0;
+		int nbr_entr = 0;
 		
 		while(file.name[0] != '\0'){
-			entries[i++]=file.name;
+			char* chemin = (char*) malloc(sizeof(char)*(strlen(path)+1));
+			memcpy(chemin, file.name, strlen(path));
+			if(strcmp(path, chemin) == 0 && strcmp(path, file.name) != 0){
+				strcpy(entries[nbr_entr++], file.name);
+			}
+			free(chemin);
+			
+			int taille = TAR_INT(file.size);
 			if(taille != 0){
 				read(tar_fd, &file, taille - taille%512 + 512);
 			}
 			read(tar_fd, &file, 512);
 		}
-		*no_entries=i;
+		lseek(tar_fd, 0, SEEK_SET);
+		*no_entries=nbr_entr;
+		return *no_entries;
 	}
-	
-	
+	lseek(tar_fd,0 ,SEEK_SET);
+	*no_entries = 0;
     return 0;
 }
 
@@ -208,7 +234,8 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
  *
  */
 ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len) {
-    return 0;
+    lseek(tar_fd,0 ,SEEK_SET);
+	return 0;
 }
 
 
