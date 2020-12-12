@@ -187,7 +187,7 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 		tar_header_t file;
 		read(tar_fd, &file, 512);
 		int nbr_entr = 0;
-		while(file.name[0] != '\0'){
+		while(file.name[0] != '\0' && *no_entries > nbr_entr){
 			char* chemin = (char*) malloc(sizeof(char)*100);
 			memcpy(chemin, file.name, strlen(path));
 			if(strcmp(path, chemin) == 0 && strcmp(path, file.name) != 0){
@@ -265,8 +265,8 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 		return -2;
 	}
 	
-	if(*len > taille){
-		*len = taille;
+	if(*len > taille - offset){
+		*len = taille - offset;
 	}
 	
 	read(tar_fd, dest, offset);
