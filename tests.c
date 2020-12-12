@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 	
-	char *path = "Revue/Trésorie/";
+	char *path = "a/aa/aaa/";
 	
 	printf("Path = '%s'\n", path);
 	
@@ -57,22 +57,22 @@ int main(int argc, char **argv) {
 	
 	char** entries = (char **) malloc(sizeof(char*)*(check+1));
 	size_t no_entries = check+1;
-	for(int j=0; j<check+1; j++){
+	for(int j=0; j<no_entries; j++){
 		entries[j] = (char*) malloc(sizeof(char)*100);
 	}
 
 	int liste = list(fd, path, entries, &no_entries);
 	for(int i= 0; i<no_entries; i++){
-		printf("entries %d: %s\n", i, entries[i]);
+		printf("\tentries %d: %s\n", i, entries[i]);
 	}
-	printf("list returned %d\n", liste);
+	printf("list returned %d (%ld entries)\n", liste, no_entries);
 	free(entries);
 	
-	uint8_t* dest = (uint8_t*) malloc(sizeof(uint8_t)*35);
-	size_t len = 35;
+	uint8_t* dest = (uint8_t*) malloc(sizeof(uint8_t)*30);
+	size_t len = 30;
 	ssize_t res = read_file(fd, path, 10, dest, &len);
 	
-	printf("buffer dest:\n");
+	printf("buffer dest (%ld bytes):\n\t", len);
 	for(int i=0; i<len; i++){
 		printf("%c",dest[i]);
 	}
