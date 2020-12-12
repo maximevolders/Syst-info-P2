@@ -159,4 +159,38 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
  */
 int count(tar_header_t* file);
 
+/**
+ * Lists the entries at a given path in the archive, or to its linked-to entry if it is a symlink.
+ *
+ * @param tar_fd A file descriptor pointing to the start of a valid tar archive file.
+ * @param path A path to an entry in the archive.
+ * @param entries An array of char arrays, each one is long enough to contain a tar entry
+ * @param no_entries An in-out argument.
+ *                   The caller set it to the number of entry in entries.
+ *                   The callee set it to the number of entry listed.
+ *
+ * @return zero if no directory at the given path exists in the archive,
+ *         any other value otherwise.
+ */
+int sym_or_fi_list(int tar_fd, char *path, char **entries, size_t *no_entries);
+
+/**
+ * Reads a file at a given path in the archive, or to its linked-to entry if it is a symlink.
+ *
+ * @param tar_fd A file descriptor pointing to the start of a valid tar archive file.
+ * @param path A path to an entry in the archive to read from.
+ * @param offset An offset in the file from which to start reading from, zero indicates the start of the file.
+ * @param dest A destination buffer to read the given file into.
+ * @param len An in-out argument.
+ *            The caller set it to the size of dest.
+ *            The callee set it to the number of bytes written to dest.
+ *
+ * @return -1 if no entry at the given path exists in the archive or the entry is not a file,
+ *         -2 if the offset is outside the file total length,
+ *         zero if the file was read in its entirety into the destination buffer,
+ *         a positive value if the file was partially read, representing the remaining bytes left to be read.
+ *
+ */
+ssize_t sym_or_fi_read(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *len);
+
 #endif

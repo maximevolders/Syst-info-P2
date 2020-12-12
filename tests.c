@@ -36,26 +36,28 @@ int main(int argc, char **argv) {
         return -1;
     }
 	
-	char *path = "tet/tete/der"; //faire un test avec path < newpath (dans list)
+	char *path = "Revue/Trésorie/";
+	
+	printf("Path = '%s'\n", path);
 	
     int check = check_archive(fd);
-    printf("check_archive returned %d\n\n", check);
+    printf("check_archive returned %d\n", check);
 	
 	int ext = exists(fd, path);
-    printf("exists returned %d\n\n", ext);
+    printf("exists returned %d\n", ext);
 	
 	int dir = is_dir(fd, path);
-    printf("is_dir returned %d\n\n", dir);
+    printf("is_dir returned %d\n", dir);
 	
 	int file = is_file(fd, path);
-    printf("is_file returned %d\n\n", file);
+    printf("is_file returned %d\n", file);
 	
 	int link = is_symlink(fd, path);
-    printf("is_symlink returned %d\n\n", link);
+    printf("is_symlink returned %d\n", link);
 	
-	char** entries = (char **) malloc(sizeof(char*)*10);
-	size_t no_entries = check;
-	for(int j=0; j<check; j++){
+	char** entries = (char **) malloc(sizeof(char*)*(check+1));
+	size_t no_entries = check+1;
+	for(int j=0; j<check+1; j++){
 		entries[j] = (char*) malloc(sizeof(char)*100);
 	}
 
@@ -63,7 +65,21 @@ int main(int argc, char **argv) {
 	for(int i= 0; i<no_entries; i++){
 		printf("entries %d: %s\n", i, entries[i]);
 	}
-	printf("list returned %d\n\n", liste);
+	printf("list returned %d\n", liste);
 	free(entries);
+	
+	uint8_t* dest = (uint8_t*) malloc(sizeof(uint8_t)*35);
+	size_t len = 35;
+	ssize_t res = read_file(fd, path, 10, dest, &len);
+	
+	printf("buffer dest:\n");
+	for(int i=0; i<len; i++){
+		printf("%c",dest[i]);
+	}
+	printf("\nread returned %ld\n", res);
+	
+	free(dest);
+	
+	
     return 0;
 }
