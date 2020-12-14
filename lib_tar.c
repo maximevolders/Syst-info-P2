@@ -182,7 +182,7 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 		lseek(tar_fd, 0, SEEK_SET);
 		return list(tar_fd, file.linkname, entries, no_entries);
 	}
-	
+
 	if(is_dir(tar_fd, path)){
 		tar_header_t file;
 		read(tar_fd, &file, 512);
@@ -190,8 +190,8 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 		while(file.name[0] != '\0' && *no_entries > nbr_entr){
 			char* chemin = (char*) malloc(sizeof(char)*100);
 			memcpy(chemin, file.name, strlen(path));
-			if(strcmp(path, chemin) == 0 && strcmp(path, file.name) != 0){
-				strcpy(entries[nbr_entr++], file.name);
+			if(strcmp(path, chemin) == 0 && strcmp(path, file.name) != 0 && !is_in_subdir(path, file.name)){
+				memcpy(entries[nbr_entr++], file.name+strlen(path), strlen(file.name)-strlen(path));
 			}
 			free(chemin);
 			
@@ -276,7 +276,7 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 	if(*len > taille - offset){
 		return 0; 
 	}
-	return (taille - offset -*len);
+	return (taille - offset - *len);
 }
 
 
@@ -305,4 +305,21 @@ int count(tar_header_t* file) {
 		}
 	}
 	return sum;
+}
+
+/**
+ * Checks if an entry is in a subdirectory of path.
+ *
+ * @param path A path to an entry in the archive.
+ *        name The path of an entry.
+ *
+ * @return 1 if name is in a subdirectory of path.
+ *         0 otherwise.
+ */
+int is_in_subdir(char* path, char* name){
+	int ind = strlen(name)-2;
+	while(name[ind] != '/'){
+		ind--;
+	}
+	return strncmp(path, name, ind) != 0;
 }

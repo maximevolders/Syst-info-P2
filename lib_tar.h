@@ -159,4 +159,15 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
  */
 int count(tar_header_t* file);
 
+/**
+ * Checks if an entry is in a subdirectory of path.
+ *
+ * @param path A path to an entry in the archive.
+ *        name The path of an entry.
+ *
+ * @return 1 if name is in a subdirectory of path.
+ *         0 otherwise.
+ */
+int is_in_subdir(char* path, char* name);
+
 #endif

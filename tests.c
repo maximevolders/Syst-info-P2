@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 	
-	char *path = "Revue/Trésorie/";
+	char *path = "Revue/";
 	
 	printf("Path = '%s'\n", path);
 	
@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
 	int link = is_symlink(fd, path);
     printf("is_symlink returned %d\n", link);
 	
-	char** entries = (char **) malloc(sizeof(char*)*(10));
-	size_t no_entries = 10;
+	size_t no_entries = 100;
+	char** entries = (char **) malloc(sizeof(char*)*no_entries);
 	for(int j=0; j<no_entries; j++){
 		entries[j] = (char*) malloc(sizeof(char)*100);
 	}
