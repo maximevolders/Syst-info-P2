@@ -19,17 +19,19 @@ int check_archive(int tar_fd) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
 	int nbr_headers=0;
-	while(file.name[0] != '\0'){
-		if((strcmp((const char*) file.magic, (const char*) TMAGIC) != 0) || (strlen(file.magic)+1 != TMAGLEN)){
+	while(file.name[0] != '\0'){ // loops until the end of the tar archive
+		if((strcmp((const char*) file.magic, (const char*) TMAGIC) != 0) || (strlen(file.magic)+1 != TMAGLEN)){ // we check if magic is equal to 'ustar'
 			return -1;
 		}
-		if(file.version[0] != '0' || file.version[1] != '0'){
+		if(file.version[0] != '0' || file.version[1] != '0'){ // we check if version is equal to '00'
 			return -2;
 		}
-		if(TAR_INT(file.chksum) != count(&file)){
+		if(TAR_INT(file.chksum) != count(&file)){ // we check if the value of chksum is correct
 			return -3;
 		}
 		nbr_headers++;
+		
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -52,12 +54,13 @@ int check_archive(int tar_fd) {
 int exists(int tar_fd, char *path) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
-	while(file.name[0] != '\0'){
-		if(strcmp((const char*) file.name, (const char*) path) == 0){
+	while(file.name[0] != '\0'){ // loops until the end of the tar archive
+		if(strcmp((const char*) file.name, (const char*) path) == 0){ // checks if path exists in the archive
 			lseek(tar_fd, 0, SEEK_SET);
 			return 1;
 		}
 		
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -82,12 +85,13 @@ int is_dir(int tar_fd, char *path) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
 	
-	while(file.name[0] != '\0'){
-		if(strcmp((const char*) file.name, (const char*) path) == 0 && file.typeflag == DIRTYPE){
+	while(file.name[0] != '\0'){ // loops until the end of the tar archive
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && file.typeflag == DIRTYPE){ // checks if path exists in the archive and is a directory
 			lseek(tar_fd, 0, SEEK_SET);
 			return 1;
 		}
 		
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -111,12 +115,13 @@ int is_dir(int tar_fd, char *path) {
 int is_file(int tar_fd, char *path) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
-	while(file.name[0] != '\0'){
-		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){
+	while(file.name[0] != '\0'){ // loops until the end of the tar archive
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == REGTYPE || file.typeflag == AREGTYPE)){ // checks if path exists in the archive and is a file
 			lseek(tar_fd, 0, SEEK_SET);
 			return 1;
 		}
 		
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -138,12 +143,13 @@ int is_file(int tar_fd, char *path) {
 int is_symlink(int tar_fd, char *path) {
 	tar_header_t file;
 	read(tar_fd, &file, 512);
-	while(file.name[0] != '\0'){
-		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){
+	while(file.name[0] != '\0'){ // loops until the end of the tar archive
+		if(strcmp((const char*) file.name, (const char*) path) == 0 && (file.typeflag == LNKTYPE || file.typeflag == SYMTYPE)){ // checks if path exists in the archive and is a symlink
 			lseek(tar_fd, 0, SEEK_SET);
 			return 1;
 		}
 		
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -153,7 +159,6 @@ int is_symlink(int tar_fd, char *path) {
 	lseek(tar_fd, 0, SEEK_SET);
     return 0;
 }
-
 
 /**
  * Lists the entries at a given path in the archive.
@@ -172,7 +177,8 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 	if(is_symlink(tar_fd, path)){
 		tar_header_t file;
 		read(tar_fd, &file, 512);
-		while(strcmp((const char*) file.name, (const char*) path) != 0){
+		while(strcmp((const char*) file.name, (const char*) path) != 0){ // loops until the right header
+			/* jump to the next header */
 			int taille = TAR_INT(file.size);
 			for(int i = 0; i < taille; i+=512){
 				read(tar_fd, &file, 512);
@@ -180,31 +186,54 @@ int list(int tar_fd, char *path, char **entries, size_t *no_entries) {
 			read(tar_fd, &file, 512);
 		}
 		lseek(tar_fd, 0, SEEK_SET);
-		return list(tar_fd, file.linkname, entries, no_entries);
+		return list(tar_fd, file.linkname, entries, no_entries); // rerun the function with the linked-to entry of the path
 	}
 
-	if(is_dir(tar_fd, path)){
+	/* if path doesn't end with '/', it's added */
+	char* newpath = (char*) malloc(sizeof(char)*100);
+	for(int i=0; i<strlen(path); i++){
+		newpath[i] = path[i];
+	}
+	if(path[strlen(path)-1] != '/'){
+		newpath[strlen(path)] = '/';
+		newpath[strlen(path)+1] = '\0';
+	} else {
+		newpath[strlen(path)] = '\0';
+	}
+
+	if(is_dir(tar_fd, newpath)){
 		tar_header_t file;
 		read(tar_fd, &file, 512);
-		int nbr_entr = 0;
-		while(file.name[0] != '\0' && *no_entries > nbr_entr){
-			char* chemin = (char*) malloc(sizeof(char)*100);
-			memcpy(chemin, file.name, strlen(path));
-			if(strcmp(path, chemin) == 0 && strcmp(path, file.name) != 0 && !is_in_subdir(path, file.name)){
-				memcpy(entries[nbr_entr++], file.name+strlen(path), strlen(file.name)-strlen(path));
+		size_t nbr_entr = 0;
+		char* chemin = (char*) malloc(sizeof(char)*100);
+		while(file.name[0] != '\0' && *no_entries > nbr_entr){ // loops until the end of the tar archive or if 'entries' is full
+			for(int i = 0; i < strlen(newpath); i++){
+				chemin[i] = file.name[i];
 			}
-			free(chemin);
+			chemin[strlen(newpath)] = '\0';
+			if(strcmp(newpath, chemin) == 0 && strcmp(newpath, file.name) != 0 && !is_in_subdir(newpath, file.name)){ // checks if the header is in the path and if it's in a subdirectory
+				/* copies the name of the file in 'entries' */
+				for(int j = 0; j < strlen(file.name)-strlen(newpath); j++){
+					entries[nbr_entr][j] = file.name[strlen(newpath)+j];
+				}
+				entries[nbr_entr][strlen(file.name)-strlen(newpath)] = '\0';
+				nbr_entr++;
+			}
 			
+			/* jump to the next header */
 			int taille = TAR_INT(file.size);
 			for(int i = 0; i < taille; i+=512){
 				read(tar_fd, &file, 512);
 			}
 			read(tar_fd, &file, 512);
 		}
+		free(chemin);
+		free(newpath);
 		lseek(tar_fd, 0, SEEK_SET);
-		*no_entries = nbr_entr;
+		*no_entries = nbr_entr; // sets no_entries to the number of entry in 'entries'
 		return 1;
 	}
+	free(newpath);
 	lseek(tar_fd, 0, SEEK_SET);
 	*no_entries = 0;
     return 0;
@@ -231,7 +260,8 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 	if(is_symlink(tar_fd, path)){
 		tar_header_t link;
 		read(tar_fd, &link, 512);
-		while(strcmp((const char*) link.name, (const char*) path) != 0){
+		while(strcmp((const char*) link.name, (const char*) path) != 0){ // loops until the right header
+			/* jump to the next header */
 			int taille = TAR_INT(link.size);
 			for(int i = 0; i < taille; i+=512){
 				read(tar_fd, &link, 512);
@@ -239,10 +269,10 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 			read(tar_fd, &link, 512);
 		}
 		lseek(tar_fd, 0, SEEK_SET);
-		return read_file(tar_fd, link.linkname, offset, dest, len);
+		return read_file(tar_fd, link.linkname, offset, dest, len); // rerun the function with the linked-to entry of the path
 	}
 	
-	if(!is_file(tar_fd, path)){
+	if(!is_file(tar_fd, path)){ 
 		*len = 0;
 		return -1;
 	}
@@ -251,6 +281,7 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 	read(tar_fd, &file, 512);
 	
 	while(strcmp((const char*) file.name, (const char*) path) != 0){
+		/* jump to the next header */
 		int taille = TAR_INT(file.size);
 		for(int i = 0; i < taille; i+=512){
 			read(tar_fd, &file, 512);
@@ -273,9 +304,6 @@ ssize_t read_file(int tar_fd, char *path, size_t offset, uint8_t *dest, size_t *
 	*len = read(tar_fd, dest, *len);
 	
     lseek(tar_fd, 0, SEEK_SET);
-	if(*len > taille - offset){
-		return 0; 
-	}
 	return (taille - offset - *len);
 }
 

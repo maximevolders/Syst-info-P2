@@ -40,20 +40,20 @@ int main(int argc, char **argv) {
 	
 	printf("Path = '%s'\n", path);
 	
-    int check = check_archive(fd);
-    printf("check_archive returned %d\n", check);
+    // int check = check_archive(fd);
+    // printf("check_archive returned %d\n", check);
 	
-	int ext = exists(fd, path);
-    printf("exists returned %d\n", ext);
+	// int ext = exists(fd, path);
+    // printf("exists returned %d\n", ext);
 	
-	int dir = is_dir(fd, path);
-    printf("is_dir returned %d\n", dir);
+	// int dir = is_dir(fd, path);
+    // printf("is_dir returned %d\n", dir);
 	
-	int file = is_file(fd, path);
-    printf("is_file returned %d\n", file);
+	// int file = is_file(fd, path);
+    // printf("is_file returned %d\n", file);
 	
-	int link = is_symlink(fd, path);
-    printf("is_symlink returned %d\n", link);
+	// int link = is_symlink(fd, path);
+    // printf("is_symlink returned %d\n", link);
 	
 	size_t no_entries = 100;
 	char** entries = (char **) malloc(sizeof(char*)*no_entries);
@@ -65,21 +65,23 @@ int main(int argc, char **argv) {
 	for(int i= 0; i<no_entries; i++){
 		printf("\tentries %d: %s\n", i, entries[i]);
 	}
+	for(int j=0; j<100; j++){
+		free(entries[j]);
+	}
 	printf("list returned %d (%ld entries)\n", liste, no_entries);
 	free(entries);
 	
-	uint8_t* dest = (uint8_t*) malloc(sizeof(uint8_t)*30);
-	size_t len = 30;
-	ssize_t res = read_file(fd, path, 10, dest, &len);
+	// uint8_t* dest = (uint8_t*) malloc(sizeof(uint8_t)*30);
+	// size_t len = 30;
+	// ssize_t res = read_file(fd, path, 10, dest, &len);
 	
-	printf("buffer dest (%ld bytes):\n\t", len);
-	for(int i=0; i<len; i++){
-		printf("%c",dest[i]);
-	}
-	printf("\nread returned %ld\n", res);
+	// printf("buffer dest (%ld bytes):\n\t", len);
+	// for(int i=0; i<len; i++){
+		// printf("%c",dest[i]);
+	// }
+	// printf("\nread returned %ld\n", res);
 	
-	free(dest);
-	
+	// free(dest);
 	
     return 0;
 }
